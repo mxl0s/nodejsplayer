@@ -1,6 +1,7 @@
 let songs = [];
 
 window.addEventListener('DOMContentLoaded', () => {
+  AOS.init(); // initialize AOS
   fetch('/songs')
     .then(response => response.json())
     .then(data => {
@@ -15,6 +16,7 @@ function renderSongs(songs) {
 
   songs.forEach(song => {
     const listItem = document.createElement('li');
+    listItem.setAttribute('data-aos', 'fade-up'); // add AOS attribute
 
     const songTitle = document.createElement('span');
     songTitle.textContent = song.title;
@@ -39,8 +41,13 @@ function renderSongs(songs) {
 
 function loadSong(file) {
   const audioPlayer = document.getElementById('audioPlayer');
+  const allSongs = document.querySelectorAll('#songList li');
+  allSongs.forEach(song => song.classList.remove('playing'));
   audioPlayer.src = file;
   audioPlayer.play();
+
+  const currentSong = [...allSongs].find(song => song.querySelector('a').href === location.origin + file);
+  if (currentSong) currentSong.classList.add('playing');
 }
 
 function searchSong() {
