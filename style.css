@@ -13,4 +13,79 @@ li {
   align-items: center;
   margin: 10px 0;
   background-color: #fff;
-  padding: 10
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+li:hover {
+  background-color: #f0f0f0;
+}
+.folder {
+  position: relative;
+  padding-left: 30px;
+}
+.folder i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+audio {
+  width: 100%;
+  margin-top: 20px;
+}
+.download-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.download-btn:hover {
+  background-color: #0056b3;
+}
+.search {
+  margin-bottom: 20px;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+.search input {
+  padding-left: 30px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.search i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.hidden {
+  display: none;
+}
+#shuffleBtn,
+#downloadBtn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: inline-block;
+  text-align: center;
+}
+#shuffleBtn:hover,
+#downloadBtn:hover {
+  background-color: #0056b3;
+}
+#shuffleBtn:disabled,
+#downloadBtn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
