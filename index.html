@@ -25,11 +25,20 @@
       border-radius: 5px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.3s ease;
+      transition: background-color 0.3s ease;
     }
     li:hover {
       background-color: #f0f0f0;
-      transform: scale(1.02);
+    }
+    .folder {
+      position: relative;
+      padding-left: 30px;
+    }
+    .folder i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
     }
     audio {
       width: 100%;
@@ -64,12 +73,29 @@
       top: 50%;
       transform: translateY(-50%);
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .hidden {
+      display: none;
     }
-    .playing i {
-      animation: spin 2s linear infinite;
+    #shuffleBtn,
+    #downloadBtn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      display: inline-block;
+      text-align: center;
+    }
+    #shuffleBtn:hover,
+    #downloadBtn:hover {
+      background-color: #0056b3;
+    }
+    #shuffleBtn:disabled,
+    #downloadBtn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -80,9 +106,13 @@
   </div>
   <ul id="songList">
   </ul>
-  <audio controls id="audioPlayer">
-    Your browser does not support the audio element.
-  </audio>
+  <div id="playerControls" class="hidden">
+    <audio controls id="audioPlayer">
+      Your browser does not support the audio element.
+    </audio>
+    <button id="shuffleBtn"><i class="fas fa-random"></i></button>
+  </div>
+  <button id="downloadBtn" class="hidden">Download Selected</button>
   <div class="modal fade" id="propertiesModal" tabindex="-1" aria-labelledby="propertiesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -95,8 +125,129 @@
       </div>
     </div>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="script.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    let directories = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetch('/songs')
+        .then(response => response.json())
+        .then(data => {
+          directories = data;
+          renderSongs(directories);
+        });
+      AOS.init();
+    });
+
+    function renderSongs(directories) {
+      const songList = document.getElementById('songList');
+      songList.innerHTML = '';
+
+      directories.forEach(directory => {
+        const dirItem = document.createElement('li');
+        dirItem.classList.add('folder');
+
+        const folderIcon = document.createElement('i');
+        folderIcon.classList.add('fas', 'fa-folder');
+        dirItem.appendChild(folderIcon);
+
+        const dirName = document.createElement('span');
+        dirName.textContent = directory.name;
+        dirItem.appendChild(dirName);
+
+        dirItem.addEventListener('click', () => {
+          renderFolderContent(directory.songs);
+        });
+
+        songList.appendChild(dirItem);
+      });
+    }
+
+function renderFolderContent(songs) {
+  const songList = document.getElementById('songList');
+  songList.innerHTML = '';
+
+  const goBackItem = document.createElement('li');
+  goBackItem.classList.add('folder');
+  goBackItem.innerHTML = '<i class="fas fa-arrow-up"></i> Go Back';
+  goBackItem.addEventListener('click', () => {
+    renderSongs(directories);
+  });
+  songList.appendChild(goBackItem);
+
+  songs.forEach(song => {
+    const listItem = document.createElement('li');
+
+    const selectBox = document.createElement('input');
+    selectBox.type = 'checkbox';
+    selectBox.className = 'song-checkbox';
+    selectBox.addEventListener('change', toggleDownloadButton);
+    listItem.appendChild(selectBox);
+
+    const songTitle = document.createElement('span');
+    songTitle.textContent = song.title;
+    listItem.appendChild(songTitle);
+
+    listItem.addEventListener('click', () => {
+      loadSong(song.file);
+    });
+
+    const downloadLink = document.createElement('a');
+    downloadLink.href = song.file;
+    downloadLink.download = song.title;
+    downloadLink.innerHTML = '<i class="fas fa-download"></i>';
+    downloadLink.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+    listItem.appendChild(downloadLink);
+
+    songList.appendChild(listItem);
+  });
+}
+
+    function loadSong(file) {
+      const audioPlayer = document.getElementById('audioPlayer');
+      const playerControls = document.getElementById('playerControls');
+      audioPlayer.src = file;
+      audioPlayer.play();
+      playerControls.classList.remove('hidden');
+    }
+
+    function searchSong() {
+      const searchTerm = document.querySelector('.search input').value.toLowerCase();
+      const filteredDirectories = directories.filter(directory => {
+        const filteredSongs = directory.songs.filter(song => song.title.toLowerCase().includes(searchTerm));
+        if (filteredSongs.length > 0) {
+          directory.songs = filteredSongs;
+          return true;
+        }
+        return false;
+      });
+      renderSongs(filteredDirectories);
+    }
+
+    document.getElementById('shuffleBtn').addEventListener('click', () => {
+      directories.forEach(directory => {
+        directory.songs.sort(() => Math.random() - 0.5);
+      });
+      renderSongs(directories);
+    });
+
+    function toggleDownloadButton() {
+      const checkboxes = document.querySelectorAll('.song-checkbox:checked');
+      const downloadButton = document.getElementById('downloadBtn');
+      downloadButton.style.display = checkboxes.length ? 'block' : 'none';
+      downloadButton.style.marginTop = '10px';
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const checkboxes = document.querySelectorAll('.song-checkbox:checked');
+      checkboxes.forEach(checkbox => {
+        const downloadLink = checkbox.parentElement.querySelector('a');
+        downloadLink.click();
+      });
+    });
+  </script>
 </body>
 </html>
