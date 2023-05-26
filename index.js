@@ -18,22 +18,32 @@ app.get('/songs', async (req, res) => {
   const files = await recursive(mp3Folder, ['!*.mp3']);
 
   for (let file of files) {
-    const dir = path.dirname(file);
-    const metadata = await musicMetadata.parseFile(file);
-    let title = metadata.common.title;
-    if (!title) {
-      title = path.basename(file); 
-    }
-    const song = {
-      title: title,
-      artist: metadata.common.artist,
-      file: file.replace(mp3Folder, ''),
-    };
-    if (!fileMap.has(dir)) {
-      fileMap.set(dir, []);
-    }
-    fileMap.get(dir).push(song);
+  const dir = path.dirname(file);
+  const metadata = await musicMetadata.parseFile(file);
+  let title = metadata.common.title;
+  
+  if (!title) {
+    title = path.basename(file);
   }
+  
+  if (title.startsWith("AUD-")) {
+    const artist = metadata.common.artist || "Unknown Artist";
+    const songName = title.slice(4); // Remove "AUD-" prefix
+    title = `${artist} - ${songName}`;
+  }
+  
+  const song = {
+    title: title,
+    artist: metadata.common.artist,
+    file: file.replace(mp3Folder, ''),
+  };
+  
+  if (!fileMap.has(dir)) {
+    fileMap.set(dir, []);
+  }
+  
+  fileMap.get(dir).push(song);
+}
 
   const directoryList = [];
   for (let [dir, songs] of fileMap.entries()) {
