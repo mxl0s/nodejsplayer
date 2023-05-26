@@ -12,4 +12,4 @@ Shuffle
 
 Yet to add:
 Radio
-Metadata reader
+
